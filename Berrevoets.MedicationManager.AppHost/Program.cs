@@ -1,9 +1,19 @@
+using Projects;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddProject<Projects.MedicationService>("medicationservice");
+var sqlUserService = builder.AddSqlServer("sqlUserService")
+    .WithDataVolume("sqluserservice")
+    .WithLifetime(ContainerLifetime.Persistent);
 
-builder.AddProject<Projects.NotificationService>("notificationservice");
+var userDb = sqlUserService.AddDatabase("userdb");
 
-builder.AddProject<Projects.UserService>("userservice");
+builder.AddProject<UserService>("userservice")
+    .WithReference(userDb)
+    .WaitFor(userDb);
+
+builder.AddProject<MedicationService>("medicationservice");
+
+builder.AddProject<NotificationService>("notificationservice");
 
 builder.Build().Run();
